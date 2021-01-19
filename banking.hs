@@ -15,7 +15,8 @@ numberOfAccounts = 10
 threads = 10
 transactionsPerThread = 100
 initialValue = 1000
--- maxAmount = 50
+minAmount = 10
+maxAmount = 50
 
 -- Get account by ID, create new empty account if it didn't exist
 getAccount :: Bank -> AccountName -> STM Account
@@ -28,13 +29,14 @@ getAccount bank accountId = do
       writeTVar bank $ Map.insert accountId account accounts
       return account
 
--- Transfer amount between two accounts (accounts can go negative)
+-- Transfer amount between two accounts
 transfer :: Pound -> Account -> Account -> STM ()
 transfer amount from to = when (from /= to) $ do
   balanceFrom <- readTVar from
   balanceTo <- readTVar to
   --  Check so that accounts can't go negative
   when (balanceFrom - amount > 0) $ do
+    -- putStrLn "Adding " ++ (balanceFrom - amount) ++ " from "++ balanceFrom ++ "to " ++ balanceTo
     writeTVar from $! balanceFrom - amount
     writeTVar to $! balanceTo + amount
 
@@ -43,7 +45,7 @@ randomTransaction bank = do
   -- Make a random transaction
   fromId <- randomRIO (1, numberOfAccounts)
   toId   <- randomRIO (1, numberOfAccounts)
-  amount <- randomRIO (10, 50)
+  amount <- randomRIO (minAmount, maxAmount)
 
   -- Perform it atomically
   atomically $ do
@@ -53,8 +55,7 @@ randomTransaction bank = do
 
 main = do
   bank <- newTVarIO Map.empty
-
-  -- Start some worker threads to each do a number of random transactions
+  -- Starting  worker threads to do a number of random transactions
   workers <- replicateM threads $ do
     done <- newEmptyMVar
     forkIO $ do
@@ -65,13 +66,12 @@ main = do
   -- Wait for worker threads to finish
   mapM_ takeMVar workers
 
-  -- Print list of accounts and total bank balance (which should be zero)
+  -- Print list of accounts and total bank balance
+  putStrLn "----------------"
   summary <- atomically $ do
     accounts <- readTVar bank
     forM (Map.assocs accounts) $ \(accountId, account) -> do
       balance <- readTVar account
       return (accountId, balance)
-
   mapM_ print summary
   putStrLn "----------------"
-  -- putStrLn $ "TOTAL BALANCE: " ++ show (sum $ map snd summary)
