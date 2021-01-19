@@ -9,7 +9,7 @@ The customers should then (at random intervals) choose one of the other customer
 
 To compile the program just use the following command
 
- `stack ghci banking.hs -- -threaded -rtsopts'`
+ `stack ghci banking.hs -- -threaded -rtsopts`
 
 and run it by
 
