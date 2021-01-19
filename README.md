@@ -1,5 +1,5 @@
 # Concurrent Banking
-
+🏦💷A simple banking program to perform different transaction concurrently using Haskell built to explain concurrency (and parallelism).
 ## Aim
 
 To simulate a concurrent “banking” system. The main program should spawn ten “customer” threads, and each of these threads model a bank account with a starting balance of £1000. 
