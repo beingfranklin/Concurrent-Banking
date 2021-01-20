@@ -24,7 +24,7 @@ minAmount = 10
 maxAmount = 50
 initialBankBalance = 1000
 
--- | Get account by ID, create new empty account if it didn't exist
+-- | Get account by ID using Map.lookup, create new empty account if it didn't exist.
 getAccount :: Customer -> AccountName -> STM Balance
 getAccount customer accountName = do
   accounts <- readTVar customer
@@ -35,7 +35,8 @@ getAccount customer accountName = do
       writeTVar customer $ Map.insert accountName account accounts
       return account
 
--- | Transfer amount between two accounts. The amounts are transferred between
+-- | Transfer amount between two accounts. The amounts are transferred between two accounts (from and to) using the ids passed while calling the method.
+--  The amount is also chosen randomly between th emaximum and minimum values, ie 10 and 50.
 transfer :: Pounds -> Balance -> Balance -> STM ()
 transfer amount from to = when (from /= to) $ do
   balanceFrom <- readTVar from
@@ -45,7 +46,8 @@ transfer amount from to = when (from /= to) $ do
     writeTVar from $! balanceFrom - amount
     writeTVar to $! balanceTo + amount
 
--- | Generate random transaction.Here we generate three random valuues - random accounts to debit and credit, and random sum to do the same. All the transactions are done atomically, either full gets executed or none.
+-- | Generate random transaction.Here we generate three random valuues - random accounts to debit and credit, and random sum to do the same.
+-- All the transactions are done atomically, either full gets executed or none.
 randomTransaction :: Customer -> IO ()
 randomTransaction customer = do
   -- Make a random transaction

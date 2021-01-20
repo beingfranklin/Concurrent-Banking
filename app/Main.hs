@@ -6,12 +6,13 @@ import Control.Monad
 import qualified Data.Map as Map
 import Lib
 import System.Random
+-- import Control.Concurrent.ParallelIO.Global
 
 -- | Constants used in Main
 threads = 10
 transactionsPerThread = 100
 
--- | Main function
+-- | Main function which has the starts the worker threads and prints the summary at last
 main :: IO ()
 main = do
   customer <- newTVarIO Map.empty
@@ -30,7 +31,7 @@ main = do
 
   -- Print list of accounts and total bank balance
   putStrLn "----------------"
-  putStrLn "(accountNo, accountName, balance)"
+  putStrLn "(Account No, Account Name, Balance)"
   summary <- atomically $ do
     accounts <- readTVar customer
     forM (Map.assocs accounts) $ \(accountName, account) -> do

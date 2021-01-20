@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Module header for module containing getAccount, transfer and randomTransaction methods</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Lib</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Lib.html#getAccount"><span class="hs-identifier">getAccount</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Lib.html#transfer"><span class="hs-identifier">transfer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Lib.html#randomTransaction"><span class="hs-identifier">randomTransaction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Random</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- | Customer Datatype declaration. Its formed using the AccountName and Balance.</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">type</span><span> </span><span id="AccountName"><span class="annot"><a href="Lib.html#AccountName"><span class="hs-identifier hs-var">AccountName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">type</span><span> </span><span id="AccountNo"><span class="annot"><a href="Lib.html#AccountNo"><span class="hs-identifier hs-var">AccountNo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">type</span><span> </span><span id="Pounds"><span class="annot"><a href="Lib.html#Pounds"><span class="hs-identifier hs-var">Pounds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">type</span><span> </span><span id="Balance"><span class="annot"><a href="Lib.html#Balance"><span class="hs-identifier hs-var">Balance</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="annot"><a href="Lib.html#Pounds"><span class="hs-identifier hs-type">Pounds</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">type</span><span> </span><span id="Customer"><span class="annot"><a href="Lib.html#Customer"><span class="hs-identifier hs-var">Customer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.Map</span></span><span> </span><span class="annot"><a href="Lib.html#AccountName"><span class="hs-identifier hs-type">AccountName</span></a></span><span> </span><span class="annot"><a href="Lib.html#Balance"><span class="hs-identifier hs-type">Balance</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | Constants used in Lib</span><span>
+</span><span id="line-22"></span><span id="numberOfAccounts"><span class="annot"><span class="annottext">numberOfAccounts :: Int
+</span><a href="Lib.html#numberOfAccounts"><span class="hs-identifier hs-var hs-var">numberOfAccounts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">10</span></span><span>
+</span><span id="line-23"></span><span id="minAmount"><span class="annot"><span class="annottext">minAmount :: Pounds
+</span><a href="Lib.html#minAmount"><span class="hs-identifier hs-var hs-var">minAmount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">10</span></span><span>
+</span><span id="line-24"></span><span id="maxAmount"><span class="annot"><span class="annottext">maxAmount :: Pounds
+</span><a href="Lib.html#maxAmount"><span class="hs-identifier hs-var hs-var">maxAmount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">50</span></span><span>
+</span><span id="line-25"></span><span id="initialBankBalance"><span class="annot"><span class="annottext">initialBankBalance :: Pounds
+</span><a href="Lib.html#initialBankBalance"><span class="hs-identifier hs-var hs-var">initialBankBalance</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">1000</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | Get account by ID using Map.lookup, create new empty account if it didn't exist.</span><span>
+</span><span id="line-28"></span><span class="annot"><a href="Lib.html#getAccount"><span class="hs-identifier hs-type">getAccount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Lib.html#Customer"><span class="hs-identifier hs-type">Customer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Lib.html#AccountName"><span class="hs-identifier hs-type">AccountName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="annot"><a href="Lib.html#Balance"><span class="hs-identifier hs-type">Balance</span></a></span><span>
+</span><span id="line-29"></span><span id="getAccount"><span class="annot"><span class="annottext">getAccount :: Customer -&gt; Int -&gt; STM Balance
+</span><a href="Lib.html#getAccount"><span class="hs-identifier hs-var hs-var">getAccount</span></a></span></span><span> </span><span id="local-6989586621679037171"><span class="annot"><span class="annottext">customer :: Customer
+</span><a href="#local-6989586621679037171"><span class="hs-identifier hs-var">customer</span></a></span></span><span> </span><span id="local-6989586621679037170"><span class="annot"><span class="annottext">accountName :: Int
+</span><a href="#local-6989586621679037170"><span class="hs-identifier hs-var">accountName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621679037169"><span class="annot"><span class="annottext">Map Int Balance
+</span><a href="#local-6989586621679037169"><span class="hs-identifier hs-var">accounts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Customer -&gt; STM (Map Int Balance)
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">Customer
+</span><a href="#local-6989586621679037171"><span class="hs-identifier hs-var">customer</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Map Int Balance -&gt; Maybe Balance
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679037170"><span class="hs-identifier hs-var">accountName</span></a></span><span> </span><span class="annot"><span class="annottext">Map Int Balance
+</span><a href="#local-6989586621679037169"><span class="hs-identifier hs-var">accounts</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679037166"><span class="annot"><span class="annottext">account :: Balance
+</span><a href="#local-6989586621679037166"><span class="hs-identifier hs-var">account</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Balance -&gt; STM Balance
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037166"><span class="hs-identifier hs-var">account</span></a></span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621679037165"><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037165"><span class="hs-identifier hs-var">account</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Pounds -&gt; STM Balance
+forall a. a -&gt; STM (TVar a)
+</span><span class="hs-identifier hs-var">newTVar</span></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="Lib.html#initialBankBalance"><span class="hs-identifier hs-var">initialBankBalance</span></a></span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">Customer -&gt; Map Int Balance -&gt; STM ()
+forall a. TVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">Customer
+</span><a href="#local-6989586621679037171"><span class="hs-identifier hs-var">customer</span></a></span><span> </span><span class="annot"><span class="annottext">(Map Int Balance -&gt; STM ()) -&gt; Map Int Balance -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Balance -&gt; Map Int Balance -&gt; Map Int Balance
+forall k a. Ord k =&gt; k -&gt; a -&gt; Map k a -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679037170"><span class="hs-identifier hs-var">accountName</span></a></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037165"><span class="hs-identifier hs-var">account</span></a></span><span> </span><span class="annot"><span class="annottext">Map Int Balance
+</span><a href="#local-6989586621679037169"><span class="hs-identifier hs-var">accounts</span></a></span><span>
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">Balance -&gt; STM Balance
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037165"><span class="hs-identifier hs-var">account</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- | Transfer amount between two accounts. The amounts are transferred between two accounts (from and to) using the ids passed while calling the method.</span><span>
+</span><span id="line-39"></span><span class="hs-comment">--  The amount is also chosen randomly between th emaximum and minimum values, ie 10 and 50.</span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Lib.html#transfer"><span class="hs-identifier hs-type">transfer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Lib.html#Pounds"><span class="hs-identifier hs-type">Pounds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Lib.html#Balance"><span class="hs-identifier hs-type">Balance</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Lib.html#Balance"><span class="hs-identifier hs-type">Balance</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span id="transfer"><span class="annot"><span class="annottext">transfer :: Pounds -&gt; Balance -&gt; Balance -&gt; STM ()
+</span><a href="Lib.html#transfer"><span class="hs-identifier hs-var hs-var">transfer</span></a></span></span><span> </span><span id="local-6989586621679037161"><span class="annot"><span class="annottext">amount :: Pounds
+</span><a href="#local-6989586621679037161"><span class="hs-identifier hs-var">amount</span></a></span></span><span> </span><span id="local-6989586621679037160"><span class="annot"><span class="annottext">from :: Balance
+</span><a href="#local-6989586621679037160"><span class="hs-identifier hs-var">from</span></a></span></span><span> </span><span id="local-6989586621679037159"><span class="annot"><span class="annottext">to :: Balance
+</span><a href="#local-6989586621679037159"><span class="hs-identifier hs-var">to</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; STM () -&gt; STM ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037160"><span class="hs-identifier hs-var">from</span></a></span><span> </span><span class="annot"><span class="annottext">Balance -&gt; Balance -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037159"><span class="hs-identifier hs-var">to</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; STM ()) -&gt; STM () -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679037156"><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037156"><span class="hs-identifier hs-var">balanceFrom</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Balance -&gt; STM Pounds
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037160"><span class="hs-identifier hs-var">from</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621679037155"><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037155"><span class="hs-identifier hs-var">balanceTo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Balance -&gt; STM Pounds
+forall a. TVar a -&gt; STM a
+</span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037159"><span class="hs-identifier hs-var">to</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-comment">--  Check so that accounts can't go negative</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; STM () -&gt; STM ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037156"><span class="hs-identifier hs-var">balanceFrom</span></a></span><span> </span><span class="annot"><span class="annottext">Pounds -&gt; Pounds -&gt; Pounds
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037161"><span class="hs-identifier hs-var">amount</span></a></span><span> </span><span class="annot"><span class="annottext">Pounds -&gt; Pounds -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; STM ()) -&gt; STM () -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Balance -&gt; Pounds -&gt; STM ()
+forall a. TVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037160"><span class="hs-identifier hs-var">from</span></a></span><span> </span><span class="annot"><span class="annottext">(Pounds -&gt; STM ()) -&gt; Pounds -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037156"><span class="hs-identifier hs-var">balanceFrom</span></a></span><span> </span><span class="annot"><span class="annottext">Pounds -&gt; Pounds -&gt; Pounds
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037161"><span class="hs-identifier hs-var">amount</span></a></span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Balance -&gt; Pounds -&gt; STM ()
+forall a. TVar a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037159"><span class="hs-identifier hs-var">to</span></a></span><span> </span><span class="annot"><span class="annottext">(Pounds -&gt; STM ()) -&gt; Pounds -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037155"><span class="hs-identifier hs-var">balanceTo</span></a></span><span> </span><span class="annot"><span class="annottext">Pounds -&gt; Pounds -&gt; Pounds
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037161"><span class="hs-identifier hs-var">amount</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- | Generate random transaction.Here we generate three random valuues - random accounts to debit and credit, and random sum to do the same.</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- All the transactions are done atomically, either full gets executed or none.</span><span>
+</span><span id="line-51"></span><span class="annot"><a href="Lib.html#randomTransaction"><span class="hs-identifier hs-type">randomTransaction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Lib.html#Customer"><span class="hs-identifier hs-type">Customer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span id="randomTransaction"><span class="annot"><span class="annottext">randomTransaction :: Customer -&gt; IO ()
+</span><a href="Lib.html#randomTransaction"><span class="hs-identifier hs-var hs-var">randomTransaction</span></a></span></span><span> </span><span id="local-6989586621679037151"><span class="annot"><span class="annottext">customer :: Customer
+</span><a href="#local-6989586621679037151"><span class="hs-identifier hs-var">customer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-comment">-- Make a random transaction</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621679037150"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679037150"><span class="hs-identifier hs-var">fromAccnNo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Int, Int) -&gt; IO Int
+forall a. Random a =&gt; (a, a) -&gt; IO a
+</span><span class="hs-identifier hs-var">randomRIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="Lib.html#numberOfAccounts"><span class="hs-identifier hs-var">numberOfAccounts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679037148"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679037148"><span class="hs-identifier hs-var">toAccnNo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Int, Int) -&gt; IO Int
+forall a. Random a =&gt; (a, a) -&gt; IO a
+</span><span class="hs-identifier hs-var">randomRIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="Lib.html#numberOfAccounts"><span class="hs-identifier hs-var">numberOfAccounts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679037147"><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037147"><span class="hs-identifier hs-var">amount</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Pounds, Pounds) -&gt; IO Pounds
+forall a. Random a =&gt; (a, a) -&gt; IO a
+</span><span class="hs-identifier hs-var">randomRIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Pounds
+</span><a href="Lib.html#minAmount"><span class="hs-identifier hs-var">minAmount</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="Lib.html#maxAmount"><span class="hs-identifier hs-var">maxAmount</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-comment">-- Perform the transfer amount atomically.</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621679037145"><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037145"><span class="hs-identifier hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Customer -&gt; Int -&gt; STM Balance
+</span><a href="Lib.html#getAccount"><span class="hs-identifier hs-var">getAccount</span></a></span><span> </span><span class="annot"><span class="annottext">Customer
+</span><a href="#local-6989586621679037151"><span class="hs-identifier hs-var">customer</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679037150"><span class="hs-identifier hs-var">fromAccnNo</span></a></span><span>
+</span><span id="line-61"></span><span>    </span><span id="local-6989586621679037144"><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037144"><span class="hs-identifier hs-var">to</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Customer -&gt; Int -&gt; STM Balance
+</span><a href="Lib.html#getAccount"><span class="hs-identifier hs-var">getAccount</span></a></span><span> </span><span class="annot"><span class="annottext">Customer
+</span><a href="#local-6989586621679037151"><span class="hs-identifier hs-var">customer</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679037148"><span class="hs-identifier hs-var">toAccnNo</span></a></span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">Pounds -&gt; Balance -&gt; Balance -&gt; STM ()
+</span><a href="Lib.html#transfer"><span class="hs-identifier hs-var">transfer</span></a></span><span> </span><span class="annot"><span class="annottext">Pounds
+</span><a href="#local-6989586621679037147"><span class="hs-identifier hs-var">amount</span></a></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037145"><span class="hs-identifier hs-var">from</span></a></span><span> </span><span class="annot"><span class="annottext">Balance
+</span><a href="#local-6989586621679037144"><span class="hs-identifier hs-var">to</span></a></span><span>
+</span><span id="line-63"></span></pre></body></html>
