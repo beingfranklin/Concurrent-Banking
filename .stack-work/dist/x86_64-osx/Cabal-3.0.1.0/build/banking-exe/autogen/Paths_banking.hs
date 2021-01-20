@@ -30,7 +30,7 @@ version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
 bindir     = "/Users/franklin/Desktop/banking/.stack-work/install/x86_64-osx/fc287ab80b86501da4327c5cc386c1988caf8ba9b16c1b28dd75082b5c303db5/8.8.4/bin"
-libdir     = "/Users/franklin/Desktop/banking/.stack-work/install/x86_64-osx/fc287ab80b86501da4327c5cc386c1988caf8ba9b16c1b28dd75082b5c303db5/8.8.4/lib/x86_64-osx-ghc-8.8.4/banking-0.1.0.0-LJBgt4KjdNx3VH5VC8a8Kb-banking-exe"
+libdir     = "/Users/franklin/Desktop/banking/.stack-work/install/x86_64-osx/fc287ab80b86501da4327c5cc386c1988caf8ba9b16c1b28dd75082b5c303db5/8.8.4/lib/x86_64-osx-ghc-8.8.4/banking-0.1.0.0-CoqJSNbY8hbpQgKgBCBgI-banking-exe"
 dynlibdir  = "/Users/franklin/Desktop/banking/.stack-work/install/x86_64-osx/fc287ab80b86501da4327c5cc386c1988caf8ba9b16c1b28dd75082b5c303db5/8.8.4/lib/x86_64-osx-ghc-8.8.4"
 datadir    = "/Users/franklin/Desktop/banking/.stack-work/install/x86_64-osx/fc287ab80b86501da4327c5cc386c1988caf8ba9b16c1b28dd75082b5c303db5/8.8.4/share/x86_64-osx-ghc-8.8.4/banking-0.1.0.0"
 libexecdir = "/Users/franklin/Desktop/banking/.stack-work/install/x86_64-osx/fc287ab80b86501da4327c5cc386c1988caf8ba9b16c1b28dd75082b5c303db5/8.8.4/libexec/x86_64-osx-ghc-8.8.4/banking-0.1.0.0"

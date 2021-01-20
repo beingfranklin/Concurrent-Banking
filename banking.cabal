@@ -32,7 +32,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , random
+    , stm
   default-language: Haskell2010
 
 executable banking-exe
@@ -45,7 +47,9 @@ executable banking-exe
   build-depends:
       banking
     , base >=4.7 && <5
+    , containers
     , random
+    , stm
   default-language: Haskell2010
 
 test-suite banking-test
@@ -59,5 +63,7 @@ test-suite banking-test
   build-depends:
       banking
     , base >=4.7 && <5
+    , containers
     , random
+    , stm
   default-language: Haskell2010

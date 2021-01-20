@@ -33,6 +33,17 @@
   (major1) == 4 && (major2) == 13 && (minor) <= 0)
 #endif /* MIN_VERSION_base */
 
+/* package containers-0.6.2.1 */
+#ifndef VERSION_containers
+#define VERSION_containers "0.6.2.1"
+#endif /* VERSION_containers */
+#ifndef MIN_VERSION_containers
+#define MIN_VERSION_containers(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  6 || \
+  (major1) == 0 && (major2) == 6 && (minor) <= 2)
+#endif /* MIN_VERSION_containers */
+
 /* package random-1.1 */
 #ifndef VERSION_random
 #define VERSION_random "1.1"
@@ -43,6 +54,17 @@
   (major1) == 1 && (major2) <  1 || \
   (major1) == 1 && (major2) == 1 && (minor) <= 0)
 #endif /* MIN_VERSION_random */
+
+/* package stm-2.5.0.0 */
+#ifndef VERSION_stm
+#define VERSION_stm "2.5.0.0"
+#endif /* VERSION_stm */
+#ifndef MIN_VERSION_stm
+#define MIN_VERSION_stm(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  5 || \
+  (major1) == 2 && (major2) == 5 && (minor) <= 0)
+#endif /* MIN_VERSION_stm */
 
 /* tool gcc-12.0.0 */
 #ifndef TOOL_VERSION_gcc
@@ -122,7 +144,7 @@
 #endif /* MIN_TOOL_VERSION_runghc */
 
 #ifndef CURRENT_COMPONENT_ID
-#define CURRENT_COMPONENT_ID "banking-0.1.0.0-LJBgt4KjdNx3VH5VC8a8Kb-banking-exe"
+#define CURRENT_COMPONENT_ID "banking-0.1.0.0-CoqJSNbY8hbpQgKgBCBgI-banking-exe"
 #endif /* CURRENT_COMPONENT_ID */
 #ifndef CURRENT_PACKAGE_VERSION
 #define CURRENT_PACKAGE_VERSION "0.1.0.0"
