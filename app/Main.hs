@@ -7,7 +7,7 @@ import qualified Data.Map as Map
 import Lib
 import System.Random
 
--- | Constants
+-- | Constants used in Main
 threads = 10
 transactionsPerThread = 100
 
@@ -19,19 +19,23 @@ main = do
   workers <- replicateM threads $ do
     done <- newEmptyMVar
     forkIO $ do
+      -- replicateM_ is Like replicateM, but discards the result.
       replicateM_ transactionsPerThread $ randomTransaction customer
       putMVar done ()
     return done
 
   -- Wait for worker threads to finish
+  -- mapM_ is Like mapM, but discards the result.
   mapM_ takeMVar workers
 
   -- Print list of accounts and total bank balance
   putStrLn "----------------"
+  putStrLn "(accountNo, accountName, balance)"
   summary <- atomically $ do
     accounts <- readTVar customer
-    forM (Map.assocs accounts) $ \(accountId, account) -> do
+    forM (Map.assocs accounts) $ \(accountName, account) -> do
       balance <- readTVar account
-      return (accountId, balance)
+      accountNo <- return accountName
+      return (accountName, accountNo, balance)
   mapM_ print summary
   putStrLn "----------------"

@@ -1,4 +1,4 @@
--- | Module header
+-- | Module header for module containing getAccount, transfer and randomTransaction methods
 module Lib
   ( getAccount,
     transfer,
@@ -11,52 +11,50 @@ import Control.Monad
 import qualified Data.Map as Map
 import System.Random
 
--- | Customer Datatype
+-- | Customer Datatype declaration. Its formed using the AccountName and Balance.
 type AccountName = Int
-
--- type AccountNo = Int
-type Pound = Integer
-type Balance = TVar Pound
+type AccountNo = Int
+type Pounds = Integer
+type Balance = TVar Pounds
 type Customer = TVar (Map.Map AccountName Balance)
 
--- | Constants
+-- | Constants used in Lib
 numberOfAccounts = 10
 minAmount = 10
 maxAmount = 50
-initialValue = 1000
+initialBankBalance = 1000
 
 -- | Get account by ID, create new empty account if it didn't exist
 getAccount :: Customer -> AccountName -> STM Balance
-getAccount customer accountId = do
+getAccount customer accountName = do
   accounts <- readTVar customer
-  case Map.lookup accountId accounts of
+  case Map.lookup accountName accounts of
     Just account -> return account
     Nothing -> do
-      account <- newTVar initialValue
-      writeTVar customer $ Map.insert accountId account accounts
+      account <- newTVar initialBankBalance
+      writeTVar customer $ Map.insert accountName account accounts
       return account
 
--- | Transfer amount between two accounts
-transfer :: Pound -> Balance -> Balance -> STM ()
+-- | Transfer amount between two accounts. The amounts are transferred between
+transfer :: Pounds -> Balance -> Balance -> STM ()
 transfer amount from to = when (from /= to) $ do
   balanceFrom <- readTVar from
   balanceTo <- readTVar to
   --  Check so that accounts can't go negative
   when (balanceFrom - amount > 0) $ do
-    -- putStrLn "Adding " ++ (balanceFrom - amount) ++ " from "++ balanceFrom ++ "to " ++ balanceTo
     writeTVar from $! balanceFrom - amount
     writeTVar to $! balanceTo + amount
 
--- | Generate random transaction
+-- | Generate random transaction.Here we generate three random valuues - random accounts to debit and credit, and random sum to do the same. All the transactions are done atomically, either full gets executed or none.
 randomTransaction :: Customer -> IO ()
 randomTransaction customer = do
   -- Make a random transaction
-  fromId <- randomRIO (1, numberOfAccounts)
-  toId <- randomRIO (1, numberOfAccounts)
+  fromAccnNo <- randomRIO (1, numberOfAccounts)
+  toAccnNo <- randomRIO (1, numberOfAccounts)
   amount <- randomRIO (minAmount, maxAmount)
 
-  -- Perform it atomically
+  -- Perform the transfer amount atomically.
   atomically $ do
-    from <- getAccount customer fromId
-    to <- getAccount customer toId
+    from <- getAccount customer fromAccnNo
+    to <- getAccount customer toAccnNo
     transfer amount from to
