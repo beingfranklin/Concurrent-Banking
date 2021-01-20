@@ -1,3 +1,3 @@
-# Changelog for concurrency
+# Changelog for bank
 
 ## Unreleased changes
